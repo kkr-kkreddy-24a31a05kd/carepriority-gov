@@ -245,6 +245,12 @@ def render_voice_dictation_widget() -> None:
       }
     </script>
     """
+    if hasattr(st, "iframe"):
+        try:
+            st.iframe(html_code, height=220, width="stretch")
+            return
+        except Exception:
+            pass
     components.html(html_code, height=220)
 
 
@@ -339,4 +345,10 @@ def render_read_result_aloud_widget(encounter: Dict[str, Any], include_name: boo
       }}
     </script>
     """
+    if hasattr(st, "iframe"):
+        try:
+            st.iframe(html_code, height=85, width="stretch")
+            return
+        except Exception:
+            pass
     components.html(html_code, height=85)

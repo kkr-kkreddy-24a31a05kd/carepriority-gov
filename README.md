@@ -1,6 +1,10 @@
 # 🏥 CarePriority Gov
 ### Dynamic Clinical Severity OPD Triage Assistant for Overloaded Government Hospitals
 
+Live demo: https://carepriority-gov.streamlit.app/
+
+> **Demo only - not validated for clinical use. Metrics use placeholder data.**
+
 > **Hackathon Problem H1:** Outpatient Department (OPD) Triage Assistant for an Overloaded Government Hospital  
 > **Clinical Disclaimer:** *Demo only — not validated for clinical use. Independent demonstration project, not an official government service.*
 

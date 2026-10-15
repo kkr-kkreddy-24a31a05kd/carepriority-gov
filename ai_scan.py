@@ -269,15 +269,15 @@ def render_ai_scan_widget():
             st.write("Select a representative paper slip to test extraction:")
             col_s1, col_s2, col_s3 = st.columns(3)
             with col_s1:
-                if st.button("Sample 1: Hypoxia", use_container_width=True):
+                if st.button("Sample 1: Hypoxia", width="stretch"):
                     new_parsed = parse_clinical_text(SAMPLE_SLIPS["Sample 1: Hypoxia & Chest Pain"])
                     st.info("Loaded Sample 1 text!")
             with col_s2:
-                if st.button("Sample 2: HTN Crisis", use_container_width=True):
+                if st.button("Sample 2: HTN Crisis", width="stretch"):
                     new_parsed = parse_clinical_text(SAMPLE_SLIPS["Sample 2: Hypertensive Crisis"])
                     st.info("Loaded Sample 2 text!")
             with col_s3:
-                if st.button("Sample 3: High Fever", use_container_width=True):
+                if st.button("Sample 3: High Fever", width="stretch"):
                     new_parsed = parse_clinical_text(SAMPLE_SLIPS["Sample 3: High Fever & Cough"])
                     st.info("Loaded Sample 3 text!")
 
@@ -375,7 +375,7 @@ def render_ai_scan_widget():
                     field_selections["complaint"] = comp_val
 
             # 4. Action: Apply selected to form
-            if st.button("📥 Apply selected to form", type="primary", use_container_width=True):
+            if st.button("📥 Apply selected to form", type="primary", width="stretch"):
                 if not field_selections:
                     st.warning("No fields are currently selected. Tick at least one field to apply.")
                 else:

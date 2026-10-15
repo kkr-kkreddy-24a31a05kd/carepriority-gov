@@ -559,7 +559,7 @@ if page == "📊 Command Center":
               🏢 Department Queue Distribution
             </div>
             """)
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width="stretch")
         else:
             render_html("""
             <div class="glass-card">
@@ -602,7 +602,7 @@ if page == "📊 Command Center":
             data=handover_txt,
             file_name=f"shift_handover_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
             mime="text/plain",
-            use_container_width=True
+            width="stretch"
         )
     with c_dl2:
         st.download_button(
@@ -610,7 +610,7 @@ if page == "📊 Command Center":
             data=handover_csv,
             file_name=f"shift_encounters_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
             mime="text/csv",
-            use_container_width=True
+            width="stretch"
         )
 
     with st.expander("👁️ View Live Handover SBAR Summary Preview", expanded=False):
@@ -622,19 +622,19 @@ if page == "📊 Command Center":
     render_html("<div class='label-caps' style='margin: 18px 0 10px 0;'>Fast Navigation Shortcuts</div>")
     fa1, fa2, fa3, fa4 = st.columns(4)
     with fa1:
-        if st.button("➕ Open Intake Portal", use_container_width=True):
+        if st.button("➕ Open Intake Portal", width="stretch"):
             st.session_state["target_page"] = "⚡ Patient Intake (<60s)"
             st.rerun()
     with fa2:
-        if st.button("📋 View Live Doctor Queue", use_container_width=True):
+        if st.button("📋 View Live Doctor Queue", width="stretch"):
             st.session_state["target_page"] = "📋 Live Doctor OPD Queue"
             st.rerun()
     with fa3:
-        if st.button("📺 Public Status Display", use_container_width=True):
+        if st.button("📺 Public Status Display", width="stretch"):
             st.session_state["target_page"] = "📺 Public Status Display"
             st.rerun()
     with fa4:
-        if st.button("⚡ Run 800-Patient Stress Test", use_container_width=True):
+        if st.button("⚡ Run 800-Patient Stress Test", width="stretch"):
             with st.spinner("Triaging 800 synthetic walk-ins..."):
                 db.clear_all()
                 stress = seed_data.generate_800_patient_stress_test()
@@ -808,7 +808,7 @@ elif page == "⚡ Patient Intake (<60s)":
         with c_meds:
             meds = st.text_input("Current Medications (Optional)", placeholder="e.g. Amlodipine, Metformin, Inhalers")
 
-        submitted = st.form_submit_button("⚡ Run Triage Assessment & Queue Patient", use_container_width=True)
+        submitted = st.form_submit_button("⚡ Run Triage Assessment & Queue Patient", width="stretch")
 
     # Process Form Submission
     if submitted:
@@ -1031,7 +1031,7 @@ elif page == "📋 Live Doctor OPD Queue":
         status_filter = st.selectbox("Status Filter", ["Active Queue", "Waiting", "Awaiting Nurse Review", "In Consultation", "Completed", "All"])
     with c_bar4:
         render_html("<div style='height: 28px;'></div>")
-        if st.button("🔄 Refresh", use_container_width=True):
+        if st.button("🔄 Refresh", width="stretch"):
             st.rerun()
 
     doc_view = st.toggle("🩺 Doctor Dedicated Mode (Filter to Selected Department Only)", value=False)
@@ -1152,13 +1152,13 @@ elif page == "📋 Live Doctor OPD Queue":
                 current_status = p.get("status")
 
                 if current_status in ["Waiting", "Awaiting Nurse Review"]:
-                    if st.button("🩺 Call Doctor", key=f"call_{enc_id}", use_container_width=True):
+                    if st.button("🩺 Call Doctor", key=f"call_{enc_id}", width="stretch"):
                         db.update_encounter(enc_id, {"status": "In Consultation"})
                         st.success(f"{enc_id} called to consultation!")
                         st.rerun()
 
                 if current_status == "In Consultation":
-                    if st.button("✅ Mark Complete", key=f"comp_{enc_id}", use_container_width=True):
+                    if st.button("✅ Mark Complete", key=f"comp_{enc_id}", width="stretch"):
                         db.update_encounter(enc_id, {"status": "Completed"})
                         st.success(f"{enc_id} completed!")
                         st.rerun()
@@ -1181,7 +1181,7 @@ elif page == "📋 Live Doctor OPD Queue":
                         rt_temp = st.number_input("Temp (°F)", min_value=10.0, max_value=130.0, value=vitals.get("temperature"), step=0.1)
                         rt_complaint = st.text_input("New Symptoms / Clinical Change", placeholder="e.g. Chest tightness / severe dizziness...")
 
-                        rt_submit = st.form_submit_button("⚡ Save & Re-Triage", use_container_width=True)
+                        rt_submit = st.form_submit_button("⚡ Save & Re-Triage", width="stretch")
                         if rt_submit:
                             new_v = {
                                 "spo2": rt_spo2,
@@ -1345,7 +1345,7 @@ elif page == "📺 Public Status Display":
             })
 
         df_display = pd.DataFrame(display_rows)
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
+        st.dataframe(df_display, width="stretch", hide_index=True)
 
         render_html("""
         <div style="
@@ -1794,7 +1794,7 @@ elif page == "🧪 Live Evaluation & Benchmarks":
       </div>
     </div>
     """)
-    st.dataframe(eval_results["comparison_table"], use_container_width=True, hide_index=True)
+    st.dataframe(eval_results["comparison_table"], width="stretch", hide_index=True)
 
     # Confusion Matrix Table & Discrete-Event Simulation
     c_cm, c_sim = st.columns([1, 1.25])

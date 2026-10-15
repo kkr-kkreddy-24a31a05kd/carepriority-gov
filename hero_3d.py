@@ -570,4 +570,10 @@ def render_hero_3d_banner(height: int = 240):
     Never rendered behind forms, tables, or patient cards.
     """
     html_markup = get_hero_3d_html(height=height)
+    if hasattr(st, "iframe"):
+        try:
+            st.iframe(html_markup, height=height, width="stretch")
+            return
+        except Exception:
+            pass
     components.html(html_markup, height=height, scrolling=False)
