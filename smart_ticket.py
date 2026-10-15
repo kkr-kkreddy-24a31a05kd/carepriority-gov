@@ -23,7 +23,7 @@ try:
 except ImportError:
     HAS_QRCODE = False
 
-from styles import render_tier_badge
+from styles import render_tier_badge, clean_html
 
 
 def generate_qr_base64(data_payload: Dict[str, Any]) -> str:
@@ -271,4 +271,4 @@ def render_smart_token_ticket(
       </div>
     </div>
     """
-    return ticket_html
+    return clean_html(ticket_html)

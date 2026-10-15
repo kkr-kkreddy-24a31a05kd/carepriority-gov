@@ -6,6 +6,7 @@ surge action checklists for charge nurses and hospital leadership.
 """
 
 from typing import List, Dict, Any, Tuple
+from styles import clean_html
 
 
 DEFAULT_SURGE_CONFIG = {
@@ -114,7 +115,7 @@ def render_surge_banner_html(surge_info: Dict[str, Any]) -> str:
 
     reasons_li = "".join([f"<li>{r}</li>" for r in surge_info.get("reasons", [])])
 
-    return f"""
+    banner_html = f"""
     <div class="surge-mode-banner" style="
       background: {bg_gradient};
       border: 2px solid {border_color};
@@ -150,3 +151,4 @@ def render_surge_banner_html(surge_info: Dict[str, Any]) -> str:
       </div>
     </div>
     """
+    return clean_html(banner_html)

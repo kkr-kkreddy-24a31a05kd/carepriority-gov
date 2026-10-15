@@ -18,6 +18,7 @@ import re
 from typing import Dict, Any, Tuple, Optional, List
 from PIL import Image
 import streamlit as st
+from styles import render_html
 
 try:
     import pytesseract
@@ -207,15 +208,14 @@ def render_ai_scan_widget():
 
         # 1. OCR Engine Status Badge
         if is_avail:
-            st.markdown(
+            render_html(
                 f'<div class="status-pill" style="border-color: rgba(0,214,143,0.4); color: #66E3C4; margin-bottom: 12px; display: inline-flex;">'
                 f'<span class="status-dot status-dot-green"></span>'
                 f'<span>OCR engine: available ({ocr_msg})</span>'
-                f'</div>',
-                unsafe_allow_html=True
+                f'</div>'
             )
         else:
-            st.markdown(
+            render_html(
                 '<div class="status-pill" style="border-color: rgba(255,199,0,0.4); color: #FFD13B; margin-bottom: 8px; display: inline-flex;">'
                 '<span class="status-dot status-dot-orange"></span>'
                 '<span>OCR engine: not installed</span>'
@@ -224,8 +224,7 @@ def render_ai_scan_widget():
                 'Offline Tesseract OCR binary not detected on system PATH. '
                 'Paper slips can be processed once installed (see README.md). '
                 'You can test the extraction pipeline using the sample paper slips below.'
-                '</div>',
-                unsafe_allow_html=True
+                '</div>'
             )
 
         st.caption("🔒 Privacy & Clinical Safety: Images are processed exclusively in RAM and never written to disk. No cloud APIs.")

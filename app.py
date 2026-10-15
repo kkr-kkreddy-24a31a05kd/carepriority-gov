@@ -1484,12 +1484,13 @@ elif page == "🔍 Encounter Detail View":
 
             audit_events = enc.get("audit", [])
             if audit_events:
-                events_html = "".join([f"""
-                <div style="background: rgba(0,0,0,0.25); border-left: 3px solid #66E3C4; padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; font-size: 0.85rem;">
-                  <div><strong>{a.get('action')}</strong> by <span style="color: #66E3C4;">{a.get('actor')}</span> &bull; <span style="color: #94A3B8;">{a.get('timestamp')}</span></div>
-                  <div style="color: #CBD5E1; margin-top: 4px;">Rationale: {a.get('reason')}</div>
-                </div>
-                """ for a in audit_events])
+                events_html = "".join([
+                    f'<div style="background: rgba(0,0,0,0.25); border-left: 3px solid #66E3C4; padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; font-size: 0.85rem;">'
+                    f'<div><strong>{a.get("action")}</strong> by <span style="color: #66E3C4;">{a.get("actor")}</span> &bull; <span style="color: #94A3B8;">{a.get("timestamp")}</span></div>'
+                    f'<div style="color: #CBD5E1; margin-top: 4px;">Rationale: {a.get("reason")}</div>'
+                    f'</div>'
+                    for a in audit_events
+                ])
             else:
                 events_html = "<div style='color: #94A3B8; font-size: 0.85rem;'>No prior audit events recorded.</div>"
 

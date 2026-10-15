@@ -1079,13 +1079,25 @@ BACKGROUND_LAYER_HTML = """
 """
 
 
+def clean_html(markup: str) -> str:
+    """Safely cleans HTML markup:
+    Dedents each line, removes blank lines, and strips leading and trailing whitespace.
+    Guarantees that no line has leading whitespace (preventing CommonMark from parsing 4+ space
+    indents as code blocks) and eliminates blank lines between tags.
+    """
+    if not markup:
+        return ""
+    lines = [line.strip() for line in markup.splitlines()]
+    return "\n".join([l for l in lines if l])
+
+
 def render_html(markup: str):
     """Safely renders HTML markup without markdown converting indented lines into code blocks.
-    Dedents the string, strips leading/trailing newlines/whitespace, and removes empty lines
-    inside HTML blocks.
+    Dedents each line, removes blank lines, strips whitespace, then renders via st.markdown(..., unsafe_allow_html=True).
     """
-    clean_markup = textwrap.dedent(markup).strip()
-    st.markdown(clean_markup, unsafe_allow_html=True)
+    cleaned = clean_html(markup)
+    if cleaned:
+        st.markdown(cleaned, unsafe_allow_html=True)
 
 
 def apply_theme(calm: bool = False):
@@ -1140,18 +1152,20 @@ def render_brand_header(page_title: str, subtitle: Optional[str] = None):
 def render_tier_badge(tier: Optional[int], is_abstained: bool = False) -> str:
     """Returns accessible HTML for a tier badge (color is always paired with icon and clear text)."""
     if is_abstained or tier is None:
-        return '<span class="tier-badge-abstain">⚠️ Needs Nurse Review</span>'
+        badge = '<span class="tier-badge-abstain">⚠️ Needs Nurse Review</span>'
     elif tier == 1:
-        return '<span class="tier-badge-l1">🚨 L1: Resuscitation</span>'
+        badge = '<span class="tier-badge-l1">🚨 L1: Resuscitation</span>'
     elif tier == 2:
-        return '<span class="tier-badge-l2">⚡ L2: Emergent</span>'
+        badge = '<span class="tier-badge-l2">⚡ L2: Emergent</span>'
     elif tier == 3:
-        return '<span class="tier-badge-l3">⏳ L3: Urgent</span>'
+        badge = '<span class="tier-badge-l3">⏳ L3: Urgent</span>'
     elif tier == 4:
-        return '<span class="tier-badge-l4">🔷 L4: Less Urgent</span>'
+        badge = '<span class="tier-badge-l4">🔷 L4: Less Urgent</span>'
     elif tier == 5:
-        return '<span class="tier-badge-l5">🟢 L5: Non-Urgent</span>'
-    return '<span class="tier-badge-l4">🔷 Unclassified</span>'
+        badge = '<span class="tier-badge-l5">🟢 L5: Non-Urgent</span>'
+    else:
+        badge = '<span class="tier-badge-l4">🔷 Unclassified</span>'
+    return clean_html(badge)
 
 
 def render_footer():

@@ -31,6 +31,7 @@ from rules_config import (
 )
 import evaluate_runner
 from triage_engine import detect_symptom_matches, predict_ml_triage
+from styles import clean_html
 
 
 def compute_factual_contributions(encounter: Dict[str, Any]) -> Dict[str, Any]:
@@ -379,49 +380,52 @@ def render_horizontal_contribution_view(encounter: Dict[str, Any]) -> str:
 
     # --- Section 1: Hard Escalation Rules ---
     if hard_escalations:
-        hard_rows = "".join([f"""
-        <div style="background: rgba(255, 42, 85, 0.08); border-left: 3px solid {item['badge_color']}; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
-            <span style="font-weight: 700; color: #FFFFFF; font-size: 0.88rem;">{item['factor']}</span>
-            <span style="font-size: 0.76rem; font-weight: 700; color: {item['badge_color']}; background: rgba(255,42,85,0.15); padding: 2px 10px; border-radius: 12px; border: 1px solid {item['badge_color']}44;">{item['effect']}</span>
-          </div>
-          <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #CBD5E1; margin-top: 5px;">
-            <span style="color: #66E3C4;">{item['measured']}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: #FFD13B;">{item['matched_rule']}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: {item['badge_color']};">{item['effect']}</span>
-          </div>
-        </div>
-        """ for item in hard_escalations])
+        hard_rows = "".join([
+            f'<div style="background: rgba(255, 42, 85, 0.08); border-left: 3px solid {item["badge_color"]}; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;">'
+            f'<div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">'
+            f'<span style="font-weight: 700; color: #FFFFFF; font-size: 0.88rem;">{item["factor"]}</span>'
+            f'<span style="font-size: 0.76rem; font-weight: 700; color: {item["badge_color"]}; background: rgba(255,42,85,0.15); padding: 2px 10px; border-radius: 12px; border: 1px solid {item["badge_color"]}44;">{item["effect"]}</span>'
+            f'</div>'
+            f'<div style="font-family: \'JetBrains Mono\', monospace; font-size: 0.82rem; color: #CBD5E1; margin-top: 5px;">'
+            f'<span style="color: #66E3C4;">{item["measured"]}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: #FFD13B;">{item["matched_rule"]}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: {item["badge_color"]};">{item["effect"]}</span>'
+            f'</div>'
+            f'</div>'
+            for item in hard_escalations
+        ])
     else:
         hard_rows = '<div style="font-size: 0.82rem; color: #94A3B8; font-style: italic; padding: 4px 0;">✓ None triggered (all vital signs within non-critical parameters)</div>'
 
     # --- Section 2: Red-Flag Keywords ---
     if red_flag_factors:
-        rf_rows = "".join([f"""
-        <div style="background: rgba(255, 122, 0, 0.08); border-left: 3px solid {item['badge_color']}; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
-            <span style="font-weight: 700; color: #FFFFFF; font-size: 0.88rem;">{item['factor']}</span>
-            <span style="font-size: 0.76rem; font-weight: 700; color: {item['badge_color']}; background: rgba(255,122,0,0.15); padding: 2px 10px; border-radius: 12px; border: 1px solid {item['badge_color']}44;">{item['effect']}</span>
-          </div>
-          <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #CBD5E1; margin-top: 5px;">
-            <span style="color: #66E3C4;">{item['measured']}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: #FFD13B;">{item['matched_rule']}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: {item['badge_color']};">{item['effect']}</span>
-          </div>
-        </div>
-        """ for item in red_flag_factors])
+        rf_rows = "".join([
+            f'<div style="background: rgba(255, 122, 0, 0.08); border-left: 3px solid {item["badge_color"]}; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;">'
+            f'<div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">'
+            f'<span style="font-weight: 700; color: #FFFFFF; font-size: 0.88rem;">{item["factor"]}</span>'
+            f'<span style="font-size: 0.76rem; font-weight: 700; color: {item["badge_color"]}; background: rgba(255,122,0,0.15); padding: 2px 10px; border-radius: 12px; border: 1px solid {item["badge_color"]}44;">{item["effect"]}</span>'
+            f'</div>'
+            f'<div style="font-family: \'JetBrains Mono\', monospace; font-size: 0.82rem; color: #CBD5E1; margin-top: 5px;">'
+            f'<span style="color: #66E3C4;">{item["measured"]}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: #FFD13B;">{item["matched_rule"]}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: {item["badge_color"]};">{item["effect"]}</span>'
+            f'</div>'
+            f'</div>'
+            for item in red_flag_factors
+        ])
     else:
         rf_rows = '<div style="font-size: 0.82rem; color: #94A3B8; font-style: italic; padding: 4px 0;">✓ None detected (no emergent red-flag keywords in complaint)</div>'
 
     # --- Section 3: Out-of-Range Vitals ---
     if out_of_range:
-        oor_rows = "".join([f"""
-        <div style="background: rgba(255, 199, 0, 0.06); border-left: 3px solid {item['badge_color']}; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
-            <span style="font-weight: 700; color: #FFFFFF; font-size: 0.88rem;">{item['factor']}</span>
-            <span style="font-size: 0.76rem; font-weight: 700; color: {item['badge_color']}; background: rgba(255,199,0,0.15); padding: 2px 10px; border-radius: 12px; border: 1px solid {item['badge_color']}44;">{item['effect']}</span>
-          </div>
-          <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #CBD5E1; margin-top: 5px;">
-            <span style="color: #66E3C4;">{item['measured']}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: #FFD13B;">{item['matched_rule']}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: {item['badge_color']};">{item['effect']}</span>
-          </div>
-        </div>
-        """ for item in out_of_range])
+        oor_rows = "".join([
+            f'<div style="background: rgba(255, 199, 0, 0.06); border-left: 3px solid {item["badge_color"]}; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;">'
+            f'<div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">'
+            f'<span style="font-weight: 700; color: #FFFFFF; font-size: 0.88rem;">{item["factor"]}</span>'
+            f'<span style="font-size: 0.76rem; font-weight: 700; color: {item["badge_color"]}; background: rgba(255,199,0,0.15); padding: 2px 10px; border-radius: 12px; border: 1px solid {item["badge_color"]}44;">{item["effect"]}</span>'
+            f'</div>'
+            f'<div style="font-family: \'JetBrains Mono\', monospace; font-size: 0.82rem; color: #CBD5E1; margin-top: 5px;">'
+            f'<span style="color: #66E3C4;">{item["measured"]}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: #FFD13B;">{item["matched_rule"]}</span> <span style="color: #94A3B8;">&rarr;</span> <span style="color: {item["badge_color"]};">{item["effect"]}</span>'
+            f'</div>'
+            f'</div>'
+            for item in out_of_range
+        ])
     else:
         oor_rows = '<div style="font-size: 0.82rem; color: #94A3B8; font-style: italic; padding: 4px 0;">✓ None (all recorded vital signs within normal physiological ranges)</div>'
 
@@ -442,24 +446,24 @@ def render_horizontal_contribution_view(encounter: Dict[str, Any]) -> str:
             is_pred = (pred_tier == t_num)
             marker = " (ML Proposed)" if is_pred else ""
 
-            row_html = f"""
-            <div style="margin-bottom: 8px;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #E2E8F0; margin-bottom: 3px;">
-                <span><strong>{t_name}</strong>{marker}</span>
-                <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: {t_color};">{p_pct:.1f}%</span>
-              </div>
-              <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden;">
-                <div style="width: {p_pct}%; height: 100%; background: {t_color}; border-radius: 3px; transition: width 0.3s ease;"></div>
-              </div>
-            </div>
-            """
+            row_html = (
+                f'<div style="margin-bottom: 8px;">'
+                f'<div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #E2E8F0; margin-bottom: 3px;">'
+                f'<span><strong>{t_name}</strong>{marker}</span>'
+                f'<span style="font-family: \'JetBrains Mono\', monospace; font-weight: 700; color: {t_color};">{p_pct:.1f}%</span>'
+                f'</div>'
+                f'<div style="width: 100%; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden;">'
+                f'<div style="width: {p_pct}%; height: 100%; background: {t_color}; border-radius: 3px; transition: width 0.3s ease;"></div>'
+                f'</div>'
+                f'</div>'
+            )
             tier_prob_rows.append(row_html)
         model_distribution_html = "".join(tier_prob_rows)
     else:
         pred_label = f"Level {pred_tier}" if pred_tier else "Not Available"
         model_distribution_html = f'<div style="font-size: 0.82rem; color: #94A3B8; font-style: italic;">Predicted Tier: {pred_label} (model probability vector not loaded)</div>'
 
-    return f"""
+    markup = f"""
     <div class="glass-card" style="margin-top: 14px; border-left: 4px solid #38BDF8;">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;">
         <div style="font-family: 'Sora', sans-serif; font-size: 1.05rem; font-weight: 800; color: #FFFFFF;">
@@ -505,3 +509,4 @@ def render_horizontal_contribution_view(encounter: Dict[str, Any]) -> str:
       </div>
     </div>
     """
+    return clean_html(markup)
