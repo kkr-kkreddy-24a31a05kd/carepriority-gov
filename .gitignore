@@ -1,0 +1,38 @@
+# CarePriority Gov - Git Ignore Configuration
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables & secrets (NEVER COMMIT)
+.env
+.streamlit/secrets.toml
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# Data files (organizer intake data & generated CSVs)
+data/*.csv
+data/*.parquet
+data/*.json
+
+# OS and Editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# KEEP models in the repository (do not ignore)
+!models/
+!models/*

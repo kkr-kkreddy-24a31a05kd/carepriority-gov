@@ -1,0 +1,77 @@
+{
+  "model_trained_at": "2026-10-14T19:42:03.499146",
+  "data_path": "data\\synthetic_placeholder.csv",
+  "is_placeholder": true,
+  "total_samples": 600,
+  "train_samples": 480,
+  "val_samples": 120,
+  "classes": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "optimal_emergency_threshold": 0.85,
+  "abstention_confidence_threshold": 0.35,
+  "validation_metrics": {
+    "emergency_recall": 1.0,
+    "emergency_precision": 0.25,
+    "missed_emergencies": 0,
+    "raw_cost_score": 0.3416666666666667,
+    "asymmetric_cost_score": 0.3416666666666667,
+    "department_accuracy": 0.9583333333333334,
+    "confusion_matrix_5x5": [
+      [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        8,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        41,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        44,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        22
+      ]
+    ]
+  },
+  "column_mapping": {
+    "complaint": "chief_complaint",
+    "spo2": "spo2",
+    "bp_systolic": "bp_systolic",
+    "bp_diastolic": "bp_diastolic",
+    "pulse": "pulse",
+    "temperature": "temperature",
+    "age": "age",
+    "sex": "sex",
+    "known_conditions": "known_conditions",
+    "medications": "medications",
+    "true_level": "true_level",
+    "true_department": "true_department",
+    "true_emergency": "true_emergency"
+  }
+}
