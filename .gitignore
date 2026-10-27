@@ -26,6 +26,11 @@ htmlcov/
 data/*.csv
 data/*.parquet
 data/*.json
+!data/cached_evaluation.json
+
+# Scratch and temporary evaluation folders
+scratch*/
+score.json
 
 # OS and Editor artifacts
 .DS_Store

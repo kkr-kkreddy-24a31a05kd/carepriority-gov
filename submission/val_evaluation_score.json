@@ -1,0 +1,79 @@
+{
+  "primary_score": 0.860861,
+  "primary_score_range": "[-0.6, 1.0], higher is better",
+  "emergency_recall": 1.0,
+  "n_true_emergencies": 171,
+  "n_missed_emergencies": 0,
+  "missed_emergency_examples": [],
+  "normalised_safety_score": 0.874394,
+  "team_cost": 803.5,
+  "reference_cost_all_level4": 6397.0,
+  "mean_cost_per_case": 0.187252,
+  "department_accuracy": 0.919875,
+  "red_flag_micro_f1": 0.442368,
+  "red_flag_precision": 0.601695,
+  "red_flag_recall": 0.349754,
+  "exact_level_accuracy_non_abstained": 0.889713,
+  "n_scored": 4291,
+  "n_missing_predictions": 0,
+  "missing_prediction_examples": [],
+  "n_abstain": 111,
+  "n_abstain_on_unassessable": 62,
+  "n_unassessable_in_truth": 86,
+  "n_under_triage_non_emergency": 77,
+  "n_over_triage": 376,
+  "cost_breakdown": {
+    "missed_emergencies": 0.0,
+    "under_triage_non_emergency": 164.0,
+    "over_triage": 572.0,
+    "abstain": 67.5
+  },
+  "confusion_true_by_pred": {
+    "1": {
+      "1": 10,
+      "2": 8,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "ABSTAIN": 0
+    },
+    "2": {
+      "1": 1,
+      "2": 148,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "ABSTAIN": 4
+    },
+    "3": {
+      "1": 4,
+      "2": 39,
+      "3": 695,
+      "4": 24,
+      "5": 5,
+      "ABSTAIN": 25
+    },
+    "4": {
+      "1": 14,
+      "2": 66,
+      "3": 173,
+      "4": 1587,
+      "5": 48,
+      "ABSTAIN": 47
+    },
+    "5": {
+      "1": 8,
+      "2": 28,
+      "3": 19,
+      "4": 24,
+      "5": 1279,
+      "ABSTAIN": 35
+    }
+  },
+  "weights": {
+    "safety": 0.6,
+    "emergency_recall": 0.2,
+    "department_accuracy": 0.1,
+    "red_flag_f1": 0.1
+  }
+}

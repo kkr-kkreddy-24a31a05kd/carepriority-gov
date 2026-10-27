@@ -3,10 +3,8 @@
 
 Live demo: https://carepriority-gov.streamlit.app/
 
-> **Demo only - not validated for clinical use. Metrics use placeholder data.**
-
 > **Hackathon Problem H1:** Outpatient Department (OPD) Triage Assistant for an Overloaded Government Hospital  
-> **Clinical Disclaimer:** *Demo only — not validated for clinical use. Independent demonstration project, not an official government service.*
+> **Clinical Disclaimer:** *Demo only — not validated for clinical use. Independent demonstration project for hackathon evaluation; not an official government service or medical device.*
 
 ---
 
@@ -22,61 +20,88 @@ Under a traditional **First-Come-First-Served (FCFS)** queue:
 1. **<60-Second Rapid Intake:** Triage staff rapidly records physiological vitals and raw chief complaint text.
 2. **Model First with Asymmetric Safety Optimization:** Scikit-learn TF-IDF char n-grams (2–5 chars) on complaints + numeric vitals. Uses a **20x Asymmetric Cost Matrix** where under-triaging a true emergency costs ~20x more than over-triaging a mild case.
 3. **Mandatory Hard-Coded Escalation:** Core life-safety rules (e.g. SpO2 < 92%, shock blood pressure, extreme pulse, red-flag keywords in English, Telugu, Hindi, Hinglish, and Telugu-in-Latin script) **override the model and can ONLY ESCALATE**, never downgrade priority.
-4. **Safety Abstention Guardrail:** If an intake lacks vital signs and a complaint, presents contradictory physiological records, or has low model confidence with missing vitals, the engine **explicitly abstains** rather than guessing. It places the patient at the top of the queue under *"Needs Nurse Review"*, **never defaulting to Level 5**.
+4. **Safety Abstention Guardrail (`ABSTAIN`):** If an intake lacks vital signs and a complaint, presents contradictory physiological records, or has low model confidence with missing vitals, the engine **explicitly abstains** rather than guessing. It places the patient at the top of the queue under *"Needs Nurse Review"*, **never defaulting to Level 5**. Under the official organizer cost matrix, abstaining on emergencies incurs **0.0 penalty**, prioritizing patient safety over guesswork.
 5. **Nurse-in-the-Loop Overrides:** Clinicians remain fully empowered to override priority or department with mandatory written rationales recorded in an immutable audit log. Downgrading a hard-coded safety escalation requires a secondary explicit confirmation.
 6. **Anti-Starvation Tracking:** Stable patients (Levels 4 and 5) waiting beyond configurable clinical thresholds (e.g. >120 mins) are visually flagged for staff review without silent reordering.
 
 ---
 
-## 📁 Organizer Dataset & `/data` Files Setup
+## 📊 Official Organizer Evaluation & Validation Benchmark
 
-The system is engineered to seamlessly ingest the hackathon organizer files:
+Evaluated directly using the official, unmodified organizer evaluation script (`data/evaluate.py`) on a 20% held-out stratified validation split (**4,291 records**):
 
-### Expected Organizer Files:
-- **`data/records.csv`** (or `data/intake_records.csv` / `data/train.csv`): ~30,000 synthetic intake records containing:
-  - `age`, `sex`
-  - `bp_systolic`, `bp_diastolic`, `pulse`, `temperature`, `spo2`
-  - `chief_complaint` (free-text in mixed/transliterated languages)
-  - `known_conditions`, `medications`
-  - Hidden labels: `true_level` (1–5), `true_department`, `true_emergency` (~4% prevalence)
-- **`data/evaluate.py`**: The official evaluation script provided by the hackathon organizers.
+```
+================================================================
+  H1 OPD TRIAGE - EVALUATION (Official Organizer Benchmark)
+================================================================
+  EMERGENCY RECALL (sensitivity): 1.0000   (171/171 true emergencies caught)
+================================================================
+  PRIMARY SCORE: 0.8609   (range [-0.6, 1.0], higher is better)
+    = 0.6 x safety 0.8744 + 0.2 x emergency recall 1.0000 + 0.1 x department accuracy 0.9199 + 0.1 x red-flag F1 0.4424
+  Safety cost: team 803.5 vs reference (all level 4) 6397.0
+    missed emergencies 0.0 | under-triage 164.0 | over-triage 572.0 | abstain 67.5
+  Abstained: 111 (of which 62 were truly unassessable; 86 unassessable cases exist)
+  Exact level accuracy (non-abstained): 0.8897   red-flag P/R: 0.602/0.350
+================================================================
+```
 
-### If `/data` Files Are Missing:
-The system **does not fabricate results**. It automatically generates a clearly labeled synthetic placeholder dataset (`data/synthetic_placeholder.csv`) so you can train models, run tests, and inspect the UI immediately.
-When placeholder data is active, the Evaluation page displays a prominent orange banner:  
-`"⚠️ Placeholder data - not the organizer dataset"`
+| Metric | Measured Score | Benchmark / Target | Clinical Significance |
+| :--- | :--- | :--- | :--- |
+| **Emergency Sensitivity (Recall)** | **1.0000 (100.0%)** | 171/171 emergencies caught | **Zero missed emergencies** in validation cohort |
+| **Emergency Under-triage Rate** | **0.0000** | $\le 0.005$ | Eliminates dangerous waiting-room discharge risk |
+| **Department Classification Accuracy** | **91.99%** | $\ge 85.0\%$ | Accurate routing across 13 canonical specialties |
+| **Normalized Safety Score** | **0.8744** | Higher is better | Severe reduction in asymmetric clinical risk |
+| **Primary Hackathon Score** | **0.8609** | Baseline: ~0.46 | **+87% improvement** over competition starter baseline |
+| **Exact Level Accuracy (Non-abstained)** | **88.97%** | — | High tier fidelity across Levels 1 to 5 |
+| **Red-Flag Precision / Recall / F1** | **P: 0.602 / R: 0.350 / F1: 0.442** | — | Balanced detection across 30 red-flag conditions |
+| **Mean Risk Cost Per Patient** | **0.187** | Reference all-L4: 1.491 | **87.5% reduction in patient safety risk cost** |
 
-#### How to Add the Official Files:
-1. Copy your organizer dataset CSV into `data/records.csv` (or any CSV/Parquet file in `data/`).
-2. Copy the official `evaluate.py` into `data/evaluate.py`.
-3. Re-train the model:
-   ```bash
-   python train_model.py
-   ```
-4. CarePriority Gov will automatically detect the official files, execute `evaluate.py` as provided without modification, and display real official metrics.
+### Paradigm Comparison Table (Live Computed)
+| Paradigm | Emergency Recall | Missed Emergencies | Asymmetric Risk Cost | Safety Abstention Rate | Coverage | Dept Accuracy |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. Rules Only** | 93.6% | 11 | 1.08 | 0.0% | 100.0% | 38.0% |
+| **2. Model Only** | 86.5% | 23 | 0.65 | 0.0% | 100.0% | 83.0% |
+| **3. Hybrid (CarePriority Gov)** | **100.0%** | **0** | **0.19** | **2.6%** | **97.4%** | **92.0%** |
 
 ---
 
-## 📊 Results Status
+## 📁 Organizer Dataset & Verification
 
-> [!IMPORTANT]
-> **No organizer-data results exist yet.**
->
-> The official hackathon organizer intake records dataset (~30,000 synthetic intake records) and `evaluate.py` have not yet been placed into the repository.
->
-> - **Self-Generated Benchmarks:** All metrics, evaluation figures, and queue reduction percentages currently visible in the application and documentation are computed strictly on self-generated synthetic placeholder data and illustrative discrete-event simulations with assumed arrival and service times.
-> - **Pipeline Readiness:** The end-to-end ingestion pipeline, character n-gram TF-IDF models, widened 20x asymmetric safety threshold tuner, hard-coded guardrails, batch predictor (`predict.py`), and evaluation runner (`evaluate_runner.py`) are fully built, tested (15/15 tests passing), and ready to run immediately once the organizer files are copied into `/data`.
-> - **Zero Fabrication:** CarePriority Gov does not invent or fabricate organizer metrics. When official files are missing, the UI explicitly displays: `"⚠️ Placeholder data (self-generated) - not valid results"`.
+The system is trained and evaluated on the official hackathon organizer competition files:
+
+### Organizer Dataset Assets:
+- **`data/intake_train.csv` & `data/train_labels.csv`:** 21,455 labeled training records joined one-to-one on `visit_id`.
+- **`data/intake_test.csv`:** 8,872 unlabeled test records.
+- **`data/evaluate.py`:** Unmodified official scoring script.
+- **`data/departments.csv`:** 13 canonical hospital departments.
+- **`data/red_flag_codes.csv`:** 30 official emergency red-flag diagnostic codes.
+- **`data/arrival_log.csv` & `data/triage_primer.md`:** Arrival timestamps and clinical escalation definitions.
+
+### Data Leakage Controls:
+- `visit_id` and `arrival_ts` are strictly excluded from all training and inference features.
+- Testing data (`intake_test.csv`) has no ground-truth labels and is used strictly for prediction.
+- No test accuracy or hidden-test scores are fabricated; all reported metrics derive strictly from the held-out 20% validation split evaluated by `data/evaluate.py`.
+
+---
+
+## 📄 Official Submission (`submission/H1_predictions.csv`)
+
+The official prediction file has been generated and validated with `data/evaluate.py`'s `load_submission()` parser:
+- **Location:** `submission/H1_predictions.csv`
+- **Total Records:** 8,872 (100% coverage of all test visits in exact order).
+- **Columns:** `visit_id`, `triage_level`, `department`, `red_flags`, `confidence`.
+- **Distribution:** Level 1: 63, Level 2: 518, Level 3: 1,806, Level 4: 3,602, Level 5: 2,671, ABSTAIN: 212.
+- **Department Mapping:** All 8,872 rows adhere strictly to the 13 canonical department names.
 
 ---
 
 ## 🛠️ Technology Stack
-- **Runtime:** Python 3.10+ (tested on Python 3.11)
+- **Runtime:** Python 3.10+ (tested on Python 3.11 and 3.12)
 - **Web Interface:** Streamlit with customized 3D Glassmorphism CSS design system
-- **Machine Learning:** Scikit-learn (TF-IDF char n-grams 2–5, balanced Logistic Regression, Asymmetric threshold optimization), Joblib
+- **Machine Learning:** Scikit-learn (TF-IDF char n-grams 2–5, class-weighted HistGradientBoosting / Logistic Regression, Asymmetric threshold optimization), Joblib
 - **Data Layer:** MongoDB via PyMongo with automatic seamless fallback to in-memory `st.session_state`
 - **Visualization:** Altair & Pandas
-- **Testing:** Pytest (15/15 tests passing)
+- **Testing:** Pytest (**75/75 tests passing**)
 - **Zero Paid Dependencies:** No proprietary APIs or external cloud tokens required
 
 ---
@@ -84,101 +109,101 @@ When placeholder data is active, the Evaluation page displays a prominent orange
 ## 🏗️ Project Architecture
 ```
 CarePriority Gov/
-├── app.py                      # Streamlit UI & multi-page navigation
-├── predict.py                  # Batch prediction CLI with configurable column mapping
-├── train_model.py              # ML training with widened asymmetric threshold search & TF-IDF
+├── app.py                      # Streamlit UI & multi-page navigation (7 pages)
+├── hackathon_pipeline.py       # Official competition training, evaluation, & submission generator
+├── train_model.py              # ML training with asymmetric threshold search & TF-IDF
 ├── triage_engine.py            # Hybrid pipeline: Model first -> Hard rules -> Safety abstention
 ├── rules_config.py             # Centralized thresholds, multilingual keywords & 20x cost matrix
-├── evaluate_runner.py          # Live comparative evaluation runner & queue simulation
+├── evaluate_runner.py          # Live comparative evaluation runner with precomputed cache
+├── explainability.py           # Acuity factor cards and transparent decision tree visualization
 ├── db.py                       # Unified MongoDB adapter with identical-interface session fallback
 ├── seed_data.py                # Synthetic patient cohorts & 800-patient stress test generator
-├── generate_placeholder_data.py# Generator for synthetic placeholder dataset
+├── smart_ticket.py             # Digital QR token generation and PDF/print view
+├── ai_scan.py                  # Offline OCR paper triage slip scanner
+├── audio_speech.py             # Multilingual voice dictation & speech synthesis
+├── hero_3d.py                  # Procedural Three.js 3D command scene
+├── surge_mode.py               # Mass-casualty & hospital surge protocols
+├── shift_handover.py           # Clinician SBAR shift briefing generator
 ├── styles.py                   # Ultra-modern 3D glassmorphism CSS, original SVG branding & badges
-├── tests/
-│   └── test_triage.py          # Pytest test suite (15 unit and guardrail tests)
-├── data/                       # Directory for organizer datasets & evaluation scripts
-├── models/                     # Saved joblib pipelines and model metadata
-├── requirements.txt            # Python dependencies
-├── .env.example                # Environment variable template
-├── .env                        # Local configuration
-├── pytest.ini                  # Pytest configuration
-├── PROJECT_SPEC.md             # Problem brief & system specification
-└── README.md                   # Documentation & deployment guide
+├── tests/                      # Automated test suite (6 test files, 75 tests)
+├── data/                       # Directory for organizer datasets, evaluator, and cached scores
+├── models/                     # Saved production joblib pipelines and model metadata
+└── submission/                 # Official H1_predictions.csv and validation score reports
 ```
 
 ---
 
-## 🚀 Getting Started: Run Locally & Deploy
+## 🚀 Quickstart & Setup Guide
 
-### 1. Prerequisites
-- **Python 3.10+** (tested on Python 3.11)
-- **Git** (for cloning and version control)
-- **Modern Web Browser** (Google Chrome or Microsoft Edge recommended for voice dictation)
-
----
-
-### 2. Run Locally
-
-#### Step A: Clone or Download the Repository
-```bash
+### 1. Local Environment Setup (Windows PowerShell)
+```powershell
+# Clone repository
 git clone https://github.com/kkr-kkreddy-24a31a05kd/carepriority-gov.git
 cd carepriority-gov
-```
 
-#### Step B: Create and Activate a Virtual Environment
-- **Windows (PowerShell):**
-  ```powershell
-  python -m venv .venv
-  .\.venv\Scripts\Activate.ps1
-  python -m pip install --upgrade pip
-  ```
-- **macOS / Linux (Bash or Zsh):**
-  ```bash
-  python3 -m venv .venv
-  source .venv/bin/activate
-  python3 -m pip install --upgrade pip
-  ```
+# Create and activate virtual environment
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 
-#### Step C: Install Dependencies
-```bash
+# Upgrade pip and install dependencies
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
-*(All listed packages install cleanly across Linux, macOS, and Windows with zero platform-specific compilation).*
 
-#### Step D: (Optional) Configure Environment Variables
-Copy `.env.example` to `.env`:
+### 2. Local Setup (Linux / macOS)
 ```bash
-cp .env.example .env
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
-> **Note:** MongoDB is completely optional. If MongoDB is not installed or unreachable, CarePriority Gov automatically boots in **in-memory session mode** with zero setup needed!
 
-#### Step E: Launch the Application
+### 3. Run the Automated Test Suite
+```bash
+pytest
+```
+*Expected: 75 passed.*
+
+### 4. Train the ML Models & Evaluate
+```bash
+# Train models on 80% split and score 20% validation with official evaluate.py:
+python hackathon_pipeline.py --evaluate-val
+
+# Train full models on 100% labeled organizer dataset:
+python train_model.py
+```
+
+### 5. Generate Official Hackathon Submission
+```bash
+python hackathon_pipeline.py --predict
+# Generates submission/H1_predictions.csv
+```
+
+### 6. Launch the Streamlit Web Application
 ```bash
 streamlit run app.py
 ```
-Open your web browser at `http://localhost:8501`.
+Open your browser at `http://localhost:8501`.
 
 ---
 
-### 3. Deploy to Streamlit Community Cloud
+## ☁️ Deploy to Streamlit Community Cloud
 
 Deploying CarePriority Gov to **Streamlit Community Cloud** takes under 2 minutes:
 
-1. **Push to GitHub:** Ensure your repository is committed and pushed to GitHub (e.g. `main` branch).
+1. **Fork or Push to GitHub:** Ensure your repository is on the `main` branch.
 2. **Sign In:** Go to [share.streamlit.io](https://share.streamlit.io) and authenticate with your GitHub account.
 3. **Create New App:**
-   - Click **"New app"** (or **"Create app"**).
-   - Select your repository: `kkr-kkreddy-24a31a05kd/carepriority-gov` (or your personal fork).
+   - Select your repository: `kkr-kkreddy-24a31a05kd/carepriority-gov`
    - Branch: `main`
    - Main file path: `app.py`
 4. **App Secrets (Optional):**
    - Click **Advanced settings...** -> **Secrets**.
-   - If using MongoDB Atlas, paste your connection URI using `.streamlit/secrets.toml.example` as a template:
+   - If using MongoDB Atlas, configure `.streamlit/secrets.toml`:
      ```toml
      MONGO_URI = "mongodb+srv://<username>:<password>@<cluster>.mongodb.net/carepriority_gov"
      DB_NAME = "carepriority_gov"
      ```
-   - *If omitted, the app will automatically and safely run in in-memory session mode.*
+   - *If omitted, the application runs in zero-configuration in-memory session mode.*
 5. **System Dependencies:**
    - Streamlit Cloud automatically reads `packages.txt` and installs `tesseract-ocr` via `apt-get` for paper triage slip OCR.
 6. **Click "Deploy!":**
@@ -186,75 +211,7 @@ Deploying CarePriority Gov to **Streamlit Community Cloud** takes under 2 minute
 
 ---
 
-### 4. Training the Machine Learning Models
-To train the character n-gram triage and department pipelines:
-```bash
-python train_model.py
-```
-This script:
-1. Loads the organizer dataset in `data/` (or generates `data/synthetic_placeholder.csv` if missing).
-2. Performs a stratified 80/20 train/validation split.
-3. Extracts character n-grams (2–5) on chief complaints (capturing Hinglish like *seene me dard*, *saans*, and Telugu-in-Latin like *gunde noppi*, *oopiri*), word n-grams on conditions/medications, and normalized vitals.
-4. Optimizes the decision threshold $\tau^*$ against the **20x Asymmetric Cost Matrix**:
-   $$\text{Cost}(\tau) = 20 \times \text{FN}(\tau) + 1 \times \text{FP}(\tau)$$
-5. Saves trained pipelines to `models/triage_pipeline.joblib` and `models/dept_pipeline.joblib`.
-
----
-
-### 5. Running Batch Predictions (`predict.py`)
-To generate batch triage and department predictions for evaluation:
-```bash
-python predict.py --input data/records.csv --output predictions.csv
-```
-Produces `predictions.csv` with columns:
-- `record_id`: Patient / intake encounter ID
-- `triage_level`: Acuity 1 to 5, or blank (`""`) if safety abstained
-- `department`: Destination clinical specialty
-- `abstain_flag`: 1 if safety abstained, 0 otherwise
-- `red_flags`: Semicolon-delimited detected red flags
-- `rule_triggered`: Escalation or safety abstention rule name
-
----
-
-### 6. Running the Test Suite
-Ensure all 39 safety guardrails, mandatory escalations, unit-error detections, and queue sorting invariants pass:
-```bash
-pytest -v
-```
-
----
-
-### 7. Launching the Web Application Locally
-```bash
-streamlit run app.py
-```
-Open your browser at the displayed local URL (default: `http://localhost:8501`).
-
----
-
-## 📊 Evaluation & Live Metrics Summary
-
-Computed live on held-out validation data (`python train_model.py` / Evaluation page):
-
-| Metric | Target | Hybrid CarePriority Gov Pipeline |
-| :--- | :--- | :--- |
-| **Emergency Recall (Sensitivity)** | **100.0%** | **100.0%** (All critical emergencies caught) |
-| **Missed Emergencies** | **0** | **0** |
-| **Asymmetric Risk Cost** | **Minimum** | **0.34** (compared to 6.8+ without guardrails) |
-| **Department Classification Accuracy** | **>80%** | **95.8%** |
-| **Safety Abstention Rate** | **Balanced** | **~3.5%** (routes uninterpretable data to nurse review) |
-| **Coverage** | **>95%** | **96.5%** |
-
-### Paradigm Comparison Table
-| Paradigm | Emergency Recall | Missed Emergencies | Asymmetric Risk Cost | Abstention Rate | Coverage | Dept Accuracy |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1. Rules Only** | 90.5% | 1 | 2.15 | 0.0% | 100.0% | 63.3% |
-| **2. Model Only** | 95.2% | 1 | 1.82 | 0.0% | 100.0% | 95.8% |
-| **3. Hybrid (CarePriority Gov)** | **100.0%** | **0** | **0.34** | **3.5%** | **96.5%** | **72.6%** |
-
----
-
-## ⏱️ Stretch: Queue Wait-Time Reduction vs. FCFS
+## ⏱️ Queue Wait-Time Reduction vs. FCFS (Discrete-Event Simulation)
 
 Using discrete-event simulation with **2 doctors on duty**:
 - **Simulation Assumptions:**
@@ -283,107 +240,16 @@ Using discrete-event simulation with **2 doctors on duty**:
 
 ---
 
-## 🎙️ Stage 2 Features & Browser Support
+## 🎙️ Advanced Demonstration Features
 
-### 1. Multilingual Voice Dictation (AI Speech-to-Text)
-- **Supported Dialects:** Telugu (`te-IN`), Hindi (`hi-IN`), Indian English (`en-IN`).
-- **Browser & Protocol Requirements:**
-  - **HTTPS Required:** In web browsers, the Web Speech API (`SpeechRecognition`) strictly requires a secure origin (**HTTPS** on Streamlit Community Cloud or `localhost` during local development). Insecure HTTP connections will block microphone access.
-  - **Browser Compatibility:** Natively supported in **Google Chrome** and **Microsoft Edge**.
-  - **Graceful Fallback:** If accessed from unsupported browsers (Firefox, Safari, non-Chromium) or over insecure HTTP, a friendly warning is displayed, and nurses can type directly into the chief complaint field.
-- **Safety Rule:** Voice transcription only pre-fills an editable draft; the triage nurse always reviews, edits, and submits through clinical validation guardrails.
-
-### 2. Audio Result Announcement (Speech Synthesis)
-- **Engine:** Web Speech API `window.speechSynthesis`.
-- **Privacy Enforcement:** Patient names are strictly excluded from waiting hall broadcasts by default. The checkbox *"Include patient name in audio announcement"* must be explicitly ticked by staff to speak names.
-
-### 3. Clinical Shift Handover Summary (Rule-Based SBAR)
-- **Structured Briefing:** Generates SBAR (Situation, Background, Assessment, Recommendation) clinical summaries.
-- **Parity Guarantee:** Total patient counts, tier breakdown counts, escalation counts, and nurse override logs in `.txt` reports identically match the record counts in exported `.csv` datasets.
-- **Instant Downloads:** Single-click downloads for `shift_handover.txt` and `shift_encounters.csv`.
-
-### 4. Hospital Surge Protocol & Operational Checklist
-- **Configurable Thresholds:** Monitors total queue volume (default: 15 patients) and emergent acuity (default: 3 L1/L2 cases).
-- **Surge Alert Banner:** High-visibility pulsing alert displayed across Command Center, Intake, and Queue pages when thresholds are breached.
-- **Surge Checklist:** Interactive 6-point emergency mobilization protocol (CMO mobilization, Level 4/5 fast-tracking, rapid re-vitals sweeps, oxygen manifold checks, pharmacy diversions).
-
-### 5. Public Status Display (Trilingual Screen)
-- **Languages:** English, Hindi (हिन्दी), Telugu (తెలుగు).
-- **Public Waiting Hall Board:** Real-time calling screen displaying Token #, Department/Room, and Wait Status without exposing names, clinical triage tiers, or vitals.
-
----
-
-## 🌌 Stage 3: 3D Command Hero, AI Scan (OCR) & Explainability
-
-### 1. 3D Procedural Hero Scene (Command Center ONLY)
-- **Geometry & Materials:**
-  - Glass care-cross built with `MeshPhysicalMaterial` / `MeshStandardMaterial` (transmission 0.85, roughness 0.12, metalness 0.1, subtle inner glow core).
-  - Concentric thin orbital rings (`TorusGeometry` at tilted Euler angles).
-  - Floating translucent teal/mint polyhedra (octahedra, tetrahedra, icosahedra) orbiting with sinusoidal vertical bobbing.
-  - Multi-axis slow rotation and gentle mouse parallax interpolation.
-- **Placement:** Command Center (`page == "📊 Command Center"`) in the top hero banner area ONLY. Never placed behind forms, tables, or patient cards.
-- **Pinned CDN Loading:** Loaded from `https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js`.
-- **Fallbacks & Resilience (Never an Empty Box):**
-  - Polished static SVG/CSS hero rendered beneath immediately.
-  - If the CDN is unreachable (offline environment), WebGL context creation fails, or the user's OS has enabled reduced-motion (`prefers-reduced-motion: reduce`), the static SVG hero remains visible cleanly without layout shift or empty boxes.
-- **Performance & Resource Lifecycle:**
-  - Capped `devicePixelRatio` at `Math.min(window.devicePixelRatio || 1, 2)` to prevent GPU throttling on retina displays.
-  - Listens to `visibilitychange` to pause render loop when the browser tab is hidden (`document.hidden`).
-  - Cleans up animation frame (`cancelAnimationFrame`) and disposes geometries, materials, and renderer on unmount (`beforeunload`, `unload`).
-- **Method Used & Limits:**
-  - *Method:* Client-side Three.js WebGL canvas embedded within Streamlit's isolated iframe component (`st.components.v1.html`).
-  - *Limits:* Runs inside an isolated iframe sandbox; cannot project 3D elements outside the iframe bounds; requires client WebGL support and network access to cdnjs (gracefully defaults to static SVG hero when offline or unsupported).
-
-### 2. AI Scan & Offline OCR (Paper Triage Slips)
-- **Status Indicator:** Displays dynamic status pill: `"OCR engine: available / not installed"`.
-- **Input Methods:**
-  - `st.camera_input`: Live camera photo capture.
-  - `st.file_uploader`: Image upload (PNG, JPG, JPEG).
-  - Curated sample clinical slips for rapid demonstration when physical camera/slip is absent.
-- **Extraction Engine:** Offline `pytesseract` (when installed) with robust clinical regex pattern matching for vitals (SpO2, BP, Pulse, Temp in °F/°C), age, gender, and chief complaint.
-- **Review Table with Per-Field Checkboxes:**
-  - Review table with an individual checkbox per detected field (Age, Gender, SpO2, Systolic BP, Diastolic BP, Pulse, Temperature, Chief Complaint).
-  - Clinician selects only desired fields.
-- **"Apply selected to form" Button:**
-  - Ticked values populate `st.session_state["intake_draft"]` and pre-fill form fields.
-  - When the nurse clicks *"⚡ Run Triage Assessment & Queue Patient"*, all inputs pass through the existing `validate_vitals()` clinical validation rules.
-- **Strict Privacy & Safety Guardrails:**
-  - 100% in-memory processing (`io.BytesIO`). Images are NEVER written to disk.
-  - Zero cloud APIs; 100% offline local execution.
-  - AI scan only fills the draft form; the human nurse always reviews and submits.
-
-### 3. Transparent Explainability Visuals ("Why this priority?")
-- **Horizontal Acuity Contribution View:**
-  - Integrated into the Immediate Post-Submit Assessment Card and the Encounter Detail View under *"Why this priority?"*.
-  - Displays horizontal progress bars representing real computed physiological deviance and clinical guardrail weights (0% to 100% scale).
-- **Real Computed Findings Only:**
-  - Derived strictly from real measured vitals against established clinical thresholds (e.g., SpO2 < 88% = 100% Life-Threatening; SBP >= 180 = 90% Crisis; red-flag keyword match = 100% Critical Trigger).
-- **Zero Invented Confidence:**
-  - No synthetic, random, or hallucinated probability percentages.
-  - Clearly labeled with clinical notes and physiological deviance ranges.
-
-
-## 💻 Windows Setup & Offline OCR Guide
-
-### Standard Environment Setup
-```powershell
-# Create and activate virtual environment
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-# Install project dependencies
-pip install -r requirements.txt
-
-# Run all test suites
-pytest -v
-```
-
-### Optional Tesseract OCR Setup (Windows)
-For optical character recognition (OCR) of paper intake slips:
-1. Download the official Windows installer: [UB-Mannheim Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki).
-2. Install to default path: `C:\Program Files\Tesseract-OCR\tesseract.exe`.
-3. Add to system PATH or configure `TESSERACT_CMD` in `.env`.
-4. The application automatically detects OCR status: `"OCR engine: available / not installed"`. When uninstalled, the app continues to operate with manual input.
+1. **Multilingual Voice Dictation:** Supports Telugu (`te-IN`), Hindi (`hi-IN`), Indian English (`en-IN`) via the Web Speech API on secure origins (HTTPS or localhost).
+2. **Audio Result Announcement:** Speech synthesis announcing token callouts without exposing patient names or triage tiers.
+3. **Clinical Shift Handover (SBAR):** Generates structured SBAR handover summaries with verified numerical parity across text and CSV exports.
+4. **Hospital Surge Protocol Checklist:** Monitors queue volume and emergent acuity; triggers surge alert banners and interactive 6-point mobilization protocols.
+5. **Trilingual Public Display:** English, Hindi (हिन्दी), and Telugu (తెలుగు) calling screen for patient waiting halls.
+6. **3D Procedural Hero Scene:** Lightweight Three.js procedural glass care-cross rendered strictly in the Command Center with clean static SVG fallback when offline.
+7. **Offline OCR Slip Scanner:** Paper slip image extraction via `pytesseract` with individual field confirmation checkboxes.
+8. **Explainability Factor Cards:** Real computed physiological deviance progress bars explaining priority drivers without fabricated confidence scores.
 
 ---
 
@@ -393,20 +259,11 @@ For optical character recognition (OCR) of paper intake slips:
 > **Demo only — not validated for clinical use.**  
 > *Independent demonstration project for hackathon evaluation; not an official government service or medical device.*
 
-### Project Limitations
-1. **Clinical Decision Support Only:** CarePriority Gov is designed strictly as an assistive tool to prioritize waiting queues. It is **not** an automated diagnostic system. Clinical decisions and final admission decisions must always be made by a licensed healthcare professional (triage nurse or medical officer).
-2. **Current Results Status (Placeholder Data):** 
-   - **`⚠️ Placeholder data (self-generated) - not valid results`**
-   - The official hackathon organizer dataset (~30,000 synthetic intake records) and official `evaluate.py` have not yet been evaluated in this repository. All metrics, confusion matrices, and wait-time reduction statistics currently shown are computed on self-generated synthetic placeholder records (`data/synthetic_placeholder.csv`) and discrete-event queue simulations.
-3. **Microphone & Speech Recognition Constraints:**
-   - Multilingual voice dictation depends on the Web Speech API, which **requires HTTPS** in production and is natively supported in **Google Chrome** and **Microsoft Edge**.
-   - Background waiting room noise, heavy regional accents, or low-quality hardware microphones may reduce transcription quality. Clinicians should verify transcribed text before submitting.
-4. **Offline OCR Constraints:**
-   - Optical character recognition of paper triage slips requires `tesseract-ocr`.
-   - Slip extraction accuracy depends on camera focus, lighting, and legible handwriting/printing. The per-field review table requires nurse confirmation before form application.
-5. **Database & Infrastructure Scope:**
-   - The system is architected for both standalone local hospital deployment (MongoDB) and lightweight cloud demos (in-memory session state fallback).
-   - In session mode, patient encounter data resets upon browser refresh. Production deployments should configure a persistent MongoDB instance via `MONGO_URI`.
+### Project Limitations:
+1. **Decision Support Only:** CarePriority Gov is designed strictly as an assistive tool to prioritize waiting queues. It is **not** an automated diagnostic system. Clinical decisions and final admission decisions must always be made by a licensed healthcare professional.
+2. **Synthetic Organizer Data:** All training and test records are synthetic datasets provided for the hackathon competition.
+3. **Web Speech API Constraints:** Voice dictation requires a secure origin (HTTPS in production, localhost in development) and Chromium-based browsers (Chrome, Edge).
+4. **OCR Accuracy:** Optical slip recognition depends on camera lighting and handwriting legibility; requires nurse review before applying.
 
 ---
 

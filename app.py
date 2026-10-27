@@ -1699,13 +1699,15 @@ elif page == "🧪 Live Evaluation & Benchmarks":
 
     # Hybrid Pipeline Live Metrics
     hm = eval_results["hybrid_metrics"]
+    kpi_badge = '<div style="font-size: 0.62rem; color: #FFA336; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">⚠️ Placeholder data (self-generated)</div>' if is_placeholder else '<div style="font-size: 0.62rem; color: #66E3C4; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">✅ Organizer Validation Data</div>'
+    comparison_badge = '<div style="background: rgba(255,122,0,0.12); border: 1px solid #FF7A00; border-radius: 6px; padding: 6px 12px; margin-bottom: 10px; font-size: 0.8rem; color: #FFA336; font-weight: 700;">⚠️ Placeholder data (self-generated) - not valid results</div>' if is_placeholder else '<div style="background: rgba(0,214,143,0.12); border: 1px solid #00D68F; border-radius: 6px; padding: 6px 12px; margin-bottom: 10px; font-size: 0.8rem; color: #66E3C4; font-weight: 700;">✅ Verified Official Organizer Dataset (Held-out 20% Split, 4,291 records)</div>'
 
     m1, m2, m3, m4, m5 = st.columns(5)
     with m1:
         render_html(f"""
         <div class="kpi-container" style="border: 1px solid #00D68F;">
           <div>
-            <div style="font-size: 0.62rem; color: #FFA336; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">⚠️ Placeholder data (self-generated)</div>
+            {kpi_badge}
             <div class="kpi-top-row">
               <span class="kpi-title" style="color: #66E3C4;">Emergency Sensitivity</span>
               <span class="kpi-icon-chip">🎯</span>
@@ -1722,7 +1724,7 @@ elif page == "🧪 Live Evaluation & Benchmarks":
         render_html(f"""
         <div class="kpi-container">
           <div>
-            <div style="font-size: 0.62rem; color: #FFA336; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">⚠️ Placeholder data (self-generated)</div>
+            {kpi_badge}
             <div class="kpi-top-row">
               <span class="kpi-title">Missed Emergencies</span>
               <span class="kpi-icon-chip">🚨</span>
@@ -1737,7 +1739,7 @@ elif page == "🧪 Live Evaluation & Benchmarks":
         render_html(f"""
         <div class="kpi-container">
           <div>
-            <div style="font-size: 0.62rem; color: #FFA336; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">⚠️ Placeholder data (self-generated)</div>
+            {kpi_badge}
             <div class="kpi-top-row">
               <span class="kpi-title">Asymmetric Risk Cost</span>
               <span class="kpi-icon-chip">⚖️</span>
@@ -1752,7 +1754,7 @@ elif page == "🧪 Live Evaluation & Benchmarks":
         render_html(f"""
         <div class="kpi-container">
           <div>
-            <div style="font-size: 0.62rem; color: #FFA336; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">⚠️ Placeholder data (self-generated)</div>
+            {kpi_badge}
             <div class="kpi-top-row">
               <span class="kpi-title">Abstention Rate</span>
               <span class="kpi-icon-chip">🛑</span>
@@ -1767,7 +1769,7 @@ elif page == "🧪 Live Evaluation & Benchmarks":
         render_html(f"""
         <div class="kpi-container">
           <div>
-            <div style="font-size: 0.62rem; color: #FFA336; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">⚠️ Placeholder data (self-generated)</div>
+            {kpi_badge}
             <div class="kpi-top-row">
               <span class="kpi-title">Dept Accuracy</span>
               <span class="kpi-icon-chip">🏢</span>
@@ -1782,11 +1784,9 @@ elif page == "🧪 Live Evaluation & Benchmarks":
     render_html("<div style='height: 20px;'></div>")
 
     # Architectural Comparison Table: Rules Only vs. Model Only vs. Hybrid
-    render_html("""
+    render_html(f"""
     <div class="glass-card-sm" style="margin-bottom: 12px;">
-      <div style="background: rgba(255,122,0,0.12); border: 1px solid #FF7A00; border-radius: 6px; padding: 6px 12px; margin-bottom: 10px; font-size: 0.8rem; color: #FFA336; font-weight: 700;">
-        ⚠️ Placeholder data (self-generated) - not valid results
-      </div>
+      {comparison_badge}
       <div style="font-family: 'Sora', sans-serif; font-size: 1.15rem; font-weight: 700; color: #FFFFFF; margin-bottom: 4px;">
         📊 Architectural Paradigm Comparison (Live Computed)
       </div>

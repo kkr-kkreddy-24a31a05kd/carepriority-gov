@@ -322,9 +322,10 @@ def compute_factual_contributions(encounter: Dict[str, Any]) -> Dict[str, Any]:
     # -------------------------------------------------------------------------
     # 4. MODEL OUTPUT LAST (Predicted Tier & Real predict_proba Distribution)
     # -------------------------------------------------------------------------
-    org_status = evaluate_runner.check_organizer_data_status()
-    has_organizer_data = org_status.get("has_organizer_data", False)
-    model_label = "model output" if has_organizer_data else "model output (trained on placeholder data)"
+    is_placeholder = encounter.get("is_placeholder", True)
+    if encounter.get("is_organizer_data") is True:
+        is_placeholder = False
+    model_label = "model output" if not is_placeholder else "model output (trained on placeholder data)"
 
     model_tier = encounter.get("model_tier")
     raw_probs = encounter.get("model_probs")

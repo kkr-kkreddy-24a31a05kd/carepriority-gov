@@ -1,10 +1,10 @@
 {
-  "model_trained_at": "2026-10-14T19:42:03.499146",
-  "data_path": "data\\synthetic_placeholder.csv",
-  "is_placeholder": true,
-  "total_samples": 600,
-  "train_samples": 480,
-  "val_samples": 120,
+  "model_trained_at": "2026-10-27T14:09:12.052273",
+  "data_path": "data/intake_train.csv + data/train_labels.csv",
+  "is_placeholder": false,
+  "total_samples": 21455,
+  "train_samples": 17164,
+  "val_samples": 4291,
   "classes": [
     1,
     2,
@@ -12,66 +12,66 @@
     4,
     5
   ],
-  "optimal_emergency_threshold": 0.85,
+  "optimal_emergency_threshold": 0.23,
   "abstention_confidence_threshold": 0.35,
   "validation_metrics": {
-    "emergency_recall": 1.0,
-    "emergency_precision": 0.25,
-    "missed_emergencies": 0,
-    "raw_cost_score": 0.3416666666666667,
-    "asymmetric_cost_score": 0.3416666666666667,
-    "department_accuracy": 0.9583333333333334,
+    "emergency_recall": 0.8654970760233918,
+    "emergency_precision": 0.2117310443490701,
+    "missed_emergencies": 23,
+    "raw_cost_score": 0.7375903052901421,
+    "asymmetric_cost_score": 0.6518294103938476,
+    "department_accuracy": 0.8338382661384293,
     "confusion_matrix_5x5": [
       [
-        3,
-        0,
+        14,
+        4,
         0,
         0,
         0
       ],
       [
-        1,
+        4,
+        126,
         8,
-        0,
-        0,
-        1
+        8,
+        7
       ],
       [
-        0,
-        0,
-        41,
-        0,
-        0
+        15,
+        118,
+        529,
+        83,
+        47
       ],
       [
-        0,
-        0,
-        0,
+        29,
+        246,
+        217,
+        1290,
+        153
+      ],
+      [
+        26,
+        117,
+        32,
         44,
-        0
-      ],
-      [
-        0,
-        0,
-        0,
-        0,
-        22
+        1174
       ]
     ]
   },
   "column_mapping": {
     "complaint": "chief_complaint",
-    "spo2": "spo2",
+    "spo2": "spo2_pct",
     "bp_systolic": "bp_systolic",
     "bp_diastolic": "bp_diastolic",
-    "pulse": "pulse",
-    "temperature": "temperature",
-    "age": "age",
+    "pulse": "pulse_bpm",
+    "temperature": "temp_c",
+    "age": "age_years",
     "sex": "sex",
     "known_conditions": "known_conditions",
-    "medications": "medications",
-    "true_level": "true_level",
-    "true_department": "true_department",
+    "medications": "current_medications",
+    "true_level": "triage_level",
+    "true_department": "department",
     "true_emergency": "true_emergency"
   }
 }

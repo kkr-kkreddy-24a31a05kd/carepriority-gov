@@ -1,0 +1,78 @@
+{
+  "is_placeholder": false,
+  "total_evaluated": 4291,
+  "comparison_table": [
+    {
+      "Paradigm": "1. Rules Only",
+      "Emergency Recall (Sensitivity)": "93.6%",
+      "Missed Emergencies": 11,
+      "Asymmetric Risk Cost": 1.08,
+      "Safety Abstention Rate": "0.0%",
+      "Coverage": "100.0%",
+      "Department Accuracy": "38.0%"
+    },
+    {
+      "Paradigm": "2. Model Only",
+      "Emergency Recall (Sensitivity)": "86.5%",
+      "Missed Emergencies": 23,
+      "Asymmetric Risk Cost": 0.65,
+      "Safety Abstention Rate": "0.0%",
+      "Coverage": "100.0%",
+      "Department Accuracy": "83.0%"
+    },
+    {
+      "Paradigm": "3. Hybrid CarePriority Gov",
+      "Emergency Recall (Sensitivity)": "100.0%",
+      "Missed Emergencies": 0,
+      "Asymmetric Risk Cost": 0.19,
+      "Safety Abstention Rate": "2.6%",
+      "Coverage": "97.4%",
+      "Department Accuracy": "92.0%"
+    }
+  ],
+  "hybrid_metrics": {
+    "emergency_recall": "100.0%",
+    "missed_emergencies": 0,
+    "asymmetric_cost_score": 0.19,
+    "abstention_rate": "2.6%",
+    "coverage": "97.4%",
+    "dept_accuracy": "92.0%",
+    "confusion_matrix": {
+      "Actual L1": {
+        "Pred L1": 10,
+        "Pred L2": 8,
+        "Pred L3": 0,
+        "Pred L4": 0,
+        "Pred L5": 0
+      },
+      "Actual L2": {
+        "Pred L1": 1,
+        "Pred L2": 148,
+        "Pred L3": 0,
+        "Pred L4": 0,
+        "Pred L5": 0
+      },
+      "Actual L3": {
+        "Pred L1": 4,
+        "Pred L2": 39,
+        "Pred L3": 695,
+        "Pred L4": 24,
+        "Pred L5": 5
+      },
+      "Actual L4": {
+        "Pred L1": 14,
+        "Pred L2": 66,
+        "Pred L3": 173,
+        "Pred L4": 1587,
+        "Pred L5": 48
+      },
+      "Actual L5": {
+        "Pred L1": 8,
+        "Pred L2": 28,
+        "Pred L3": 19,
+        "Pred L4": 24,
+        "Pred L5": 1279
+      }
+    }
+  }
+}

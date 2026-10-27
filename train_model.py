@@ -36,25 +36,37 @@ from rules_config import (
 )
 
 
-def find_data_file() -> Tuple[str, bool]:
+def find_data_file() -> Tuple[Any, bool]:
     """
     Locates the dataset in /data directory.
-    If organizer dataset is present (not synthetic_placeholder.csv), returns it with is_placeholder=False.
+    If organizer dataset is present (intake_train.csv and train_labels.csv), joins them on visit_id.
     Otherwise returns data/synthetic_placeholder.csv with is_placeholder=True.
     """
     data_dir = "data"
     os.makedirs(data_dir, exist_ok=True)
+    intake_train = os.path.join(data_dir, "intake_train.csv")
+    train_labels = os.path.join(data_dir, "train_labels.csv")
+    if os.path.exists(intake_train) and os.path.exists(train_labels):
+        print(f"[CarePriority ML] Detected ORGANIZER DATASET: {intake_train} + {train_labels}")
+        intake_df = pd.read_csv(intake_train)
+        labels_df = pd.read_csv(train_labels)
+        merged = intake_df.merge(labels_df, on="visit_id", how="inner", validate="one_to_one")
+        return merged, False
 
     # Search for organizer csv/parquet/json files in data/
     candidates = glob.glob(os.path.join(data_dir, "*.csv")) + \
                  glob.glob(os.path.join(data_dir, "*.parquet")) + \
                  glob.glob(os.path.join(data_dir, "*.json"))
 
-    # Filter out synthetic placeholder and test splits to find real organizer files if added
+    # Filter out synthetic placeholder and non-feature tables
     organizer_files = [
         f for f in candidates
         if "synthetic_placeholder" not in os.path.basename(f).lower()
         and "validation_split" not in os.path.basename(f).lower()
+        and "arrival_log" not in os.path.basename(f).lower()
+        and "departments" not in os.path.basename(f).lower()
+        and "red_flag" not in os.path.basename(f).lower()
+        and "intake_test" not in os.path.basename(f).lower()
         and not os.path.basename(f).startswith(".")
     ]
 
@@ -98,8 +110,8 @@ def clean_and_normalize_df(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, st
             "reason_for_visit", "intake_complaint"
         ], "chief_complaint"),
         "spo2": resolve_col([
-            "spo2", "o2_sat", "oxygen_saturation", "pulse_oximetry", 
-            "spo2_percent", "sp_o2", "o2sat", "saturation"
+            "spo2", "spo2_pct", "spo2_percent", "spo2_perc", "o2_sat",
+            "oxygen_saturation", "pulse_oximetry", "sp_o2", "o2sat", "saturation"
         ], "spo2"),
         "bp_systolic": resolve_col([
             "bp_systolic", "systolic", "sbp", "bp_sys", "systolic_bp", 
@@ -170,6 +182,14 @@ def clean_and_normalize_df(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, st
     # BP of 0 = treated as missing, flagged for verification, stored as None
     clean_df.loc[clean_df["bp_systolic"] == 0, "bp_systolic"] = np.nan
     clean_df.loc[clean_df["bp_diastolic"] == 0, "bp_diastolic"] = np.nan
+    # Swap inverted BP
+    swap_mask = clean_df["bp_systolic"].notna() & clean_df["bp_diastolic"].notna() & (clean_df["bp_systolic"] < clean_df["bp_diastolic"]) & (clean_df["bp_systolic"] > 0)
+    clean_df.loc[swap_mask, ["bp_systolic", "bp_diastolic"]] = clean_df.loc[swap_mask, ["bp_diastolic", "bp_systolic"]].values
+    # Clean vitals plausibility
+    clean_df.loc[(clean_df["spo2"] < 50) | (clean_df["spo2"] > 100), "spo2"] = np.nan
+    clean_df.loc[(clean_df["pulse"] < 25) | (clean_df["pulse"] > 250), "pulse"] = np.nan
+    clean_df.loc[(clean_df["temperature"] >= 86) & (clean_df["temperature"] <= 113), "temperature"] = (clean_df["temperature"] - 32) * 5 / 9
+    clean_df.loc[(clean_df["temperature"] < 30) | (clean_df["temperature"] > 45), "temperature"] = np.nan
 
     # Target: true_level (1 to 5) - handles both numeric and textual representations
     if clean_df["true_level"] is not None and not clean_df["true_level"].isnull().all():
@@ -331,22 +351,30 @@ def train_and_save_pipeline(data_path: Optional[str] = None) -> Dict[str, Any]:
     Saves models to models/ directory.
     """
     if data_path is None:
-        data_path, is_placeholder = find_data_file()
+        data_source, is_placeholder = find_data_file()
     else:
-        is_placeholder = "placeholder" in data_path.lower()
+        data_source = data_path
+        is_placeholder = "placeholder" in str(data_path).lower()
 
     os.makedirs("models", exist_ok=True)
 
     # 1. Load Data
-    print(f"[CarePriority ML] Loading dataset from {data_path}...")
-    if data_path.endswith(".csv"):
-        df_raw = pd.read_csv(data_path)
-    elif data_path.endswith(".parquet"):
-        df_raw = pd.read_parquet(data_path)
-    elif data_path.endswith(".json"):
-        df_raw = pd.read_json(data_path)
+    if isinstance(data_source, pd.DataFrame):
+        df_raw = data_source
+        data_path_str = "data/intake_train.csv + data/train_labels.csv"
+        print(f"[CarePriority ML] Loading dataset from {data_path_str} (in-memory joined DataFrame)...")
+    elif str(data_source).endswith(".parquet"):
+        print(f"[CarePriority ML] Loading dataset from {data_source}...")
+        df_raw = pd.read_parquet(data_source)
+        data_path_str = str(data_source)
+    elif str(data_source).endswith(".json"):
+        print(f"[CarePriority ML] Loading dataset from {data_source}...")
+        df_raw = pd.read_json(data_source)
+        data_path_str = str(data_source)
     else:
-        df_raw = pd.read_csv(data_path)
+        print(f"[CarePriority ML] Loading dataset from {data_source}...")
+        df_raw = pd.read_csv(data_source)
+        data_path_str = str(data_source)
 
     df, col_map = clean_and_normalize_df(df_raw)
     print(f"[CarePriority ML] Loaded {len(df)} records. Emergency prevalence: {df['true_emergency'].mean()*100:.1f}%")
@@ -436,7 +464,7 @@ def train_and_save_pipeline(data_path: Optional[str] = None) -> Dict[str, Any]:
 
     metadata = {
         "model_trained_at": datetime.now().isoformat(),
-        "data_path": data_path,
+        "data_path": data_path_str,
         "is_placeholder": is_placeholder,
         "total_samples": len(df),
         "train_samples": len(df_train),
