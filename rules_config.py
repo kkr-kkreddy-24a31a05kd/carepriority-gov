@@ -268,27 +268,25 @@ SECONDARY_KEYWORDS = {
 # 6. DEPARTMENT ROUTING RULES
 # ==============================================================================
 # Demo values — must be reviewed by a clinician before any real use.
+# Exact 13 canonical departments matching organizer evaluator and trained ML model
 DEPARTMENTS = [
     "General Medicine",
-    "Cardiology",
-    "Pediatrics",
-    "Orthopedics",
-    "Emergency / Resuscitation",
-    "Obstetrics & Gynecology",
+    "Paediatrics",
+    "Obstetrics & Gynaecology",
+    "General Surgery",
+    "Orthopaedics",
     "ENT",
-    "Respiratory / Pulmonology"
+    "Ophthalmology",
+    "Dermatology",
+    "Psychiatry",
+    "Dental",
+    "Cardiology",
+    "Pulmonology/Chest & TB",
+    "Emergency/Casualty"
 ]
 
 DEPARTMENT_RULES = {
-    "Pediatrics": {
-        "max_age": 14,
-        "keywords": [
-            "child", "baby", "infant", "newborn", "pediatric",
-            "बच्चा", "शिशु", "बालक", "పిల్లవాడు", "శిశువు", "పాప", "బాబు",
-            "bachha", "bacha", "shishu", "pillavadu", "paapa", "baabu"
-        ]
-    },
-    "Emergency / Resuscitation": {
+    "Emergency/Casualty": {
         "force_on_tiers": [1],
         "keywords": [
             "trauma", "unconscious", "shock", "massive bleeding", "poisoning", 
@@ -305,15 +303,23 @@ DEPARTMENT_RULES = {
             "seene me dard", "chati me dard", "gunde noppi", "chaati noppi"
         ]
     },
-    "Respiratory / Pulmonology": {
+    "Paediatrics": {
+        "max_age": 14,
+        "keywords": [
+            "child", "baby", "infant", "newborn", "pediatric", "paediatric",
+            "बच्चा", "शिशु", "बालक", "పిల్లవాడు", "శిశువు", "పాప", "బాబు",
+            "bachha", "bacha", "shishu", "pillavadu", "paapa", "baabu"
+        ]
+    },
+    "Pulmonology/Chest & TB": {
         "keywords": [
             "asthma", "breathing", "wheezing", "cough", "phlegm", "tuberculosis",
-            "tb", "pneumonia", "shortness of breath", "copd", "stridor",
+            "tb", "pneumonia", "shortness of breath", "copd", "stridor", "inhaler",
             "सांस", "दमा", "खांसी", "टीबी", "శ్వాస", "దగ్గు", "ఆయాసం",
             "saans", "dama", "khansi", "swasa", "daggu", "aayasam", "oopiri"
         ]
     },
-    "Orthopedics": {
+    "Orthopaedics": {
         "keywords": [
             "bone", "fracture", "joint", "dislocation", "sprain", "knee", 
             "back pain", "spine", "fall", "injury to leg", "injury to arm",
@@ -321,7 +327,7 @@ DEPARTMENT_RULES = {
             "haddi", "kamar dard", "jod", "emuka", "mokalu"
         ]
     },
-    "Obstetrics & Gynecology": {
+    "Obstetrics & Gynaecology": {
         "gender": "Female",
         "keywords": [
             "pregnancy", "pregnant", "labor pain", "labor", "vaginal bleeding",
@@ -338,16 +344,59 @@ DEPARTMENT_RULES = {
             "kaan", "naak", "gala", "chevi", "mukku", "gontu"
         ]
     },
+    "Dental": {
+        "keywords": [
+            "dental", "tooth", "toothache", "teeth", "gum", "gum bleeding",
+            "cavity", "jaw swelling", "wisdom tooth", "molar",
+            "दांत", "मसूड़े", "పన్ను", "దంత", "dant", "danta"
+        ]
+    },
+    "Dermatology": {
+        "keywords": [
+            "skin", "rash", "itching", "scabies", "ringworm", "eczema",
+            "acne", "psoriasis", "hives", "dermatitis", "white patches",
+            "त्वचा", "खुजली", "दाद", "చర్మం", "దురద", "khujli", "chaala"
+        ]
+    },
+    "Ophthalmology": {
+        "keywords": [
+            "eye", "vision", "cataract", "red eye", "glasses", "cornea",
+            "blurry vision", "blindness", "conjunctivitis", "foreign body in eye",
+            "आंख", "दृष्टि", "मोतियाबिंद", "కన్ను", "చూపు", "aankh", "kannu"
+        ]
+    },
+    "Psychiatry": {
+        "keywords": [
+            "depression", "anxiety", "low mood", "hallucination", "suicidal",
+            "suicide", "sleep problem", "insomnia", "psychosis", "agitation",
+            "alcohol withdrawal", "mental", "तनाव", "मानसिक", "నిద్రలేమి", "మానసిక"
+        ]
+    },
+    "General Surgery": {
+        "keywords": [
+            "surgery", "cut", "wound", "boil", "abscess", "cellulitis",
+            "diabetic foot", "dog bite", "bite", "appendicitis", "kidney stone",
+            "gallbladder", "gall bladder", "hernia", "piles", "fistula", "breast lump",
+            "gangrene", "घाव", "चोट", "ऑपरेशन", "గాయం", "కుట్లు", "ghaav", "gaayam"
+        ]
+    },
     "General Medicine": {
         "is_default": True,
         "keywords": [
             "fever", "weakness", "vomiting", "diarrhea", "headache", 
             "fatigue", "body ache", "diabetes", "infection", "jaundice",
-            "बुखार", "कमजोरी", "उल्टी", "दस्त", "ज्वరం", "నీరసం",
+            "बुखार", "कमजोरी", "उल्टी", "दस्त", "జ్వరం", "నీరసం",
             "bukhar", "kamzori", "ulti", "dast", "jwaram", "neerasam"
         ]
     }
 }
+
+# Backward compatibility aliases for legacy callers
+DEPARTMENT_RULES["Pediatrics"] = DEPARTMENT_RULES["Paediatrics"]
+DEPARTMENT_RULES["Emergency / Resuscitation"] = DEPARTMENT_RULES["Emergency/Casualty"]
+DEPARTMENT_RULES["Respiratory / Pulmonology"] = DEPARTMENT_RULES["Pulmonology/Chest & TB"]
+DEPARTMENT_RULES["Orthopedics"] = DEPARTMENT_RULES["Orthopaedics"]
+DEPARTMENT_RULES["Obstetrics & Gynecology"] = DEPARTMENT_RULES["Obstetrics & Gynaecology"]
 
 # ==============================================================================
 # 7. SAFETY ABSTENTION TRIGGER CONDITIONS

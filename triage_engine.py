@@ -453,36 +453,45 @@ def recommend_department(
     gender: Optional[str],
     tier: Optional[int]
 ) -> str:
-    """Recommends clinical department based on transparent rule priority."""
+    """Recommends clinical department based on transparent rule priority across 13 canonical departments."""
     if tier == 1:
-        return "Emergency / Resuscitation"
+        return "Emergency/Casualty"
 
     complaint_str = (complaint or "").lower()
 
-    # 1. High-acuity specialty symptom keywords checked first
-    for spec in ["Cardiology", "Orthopedics", "ENT"]:
+    # 1. Specialized physical/organ injuries checked first (Dental, Ophthalmology, ENT, Orthopaedics)
+    organ_specialties = ["Dental", "Ophthalmology", "ENT", "Orthopaedics"]
+    for spec in organ_specialties:
         rule = DEPARTMENT_RULES.get(spec)
         if rule and "keywords" in rule:
             matches = detect_symptom_matches(complaint_str, rule["keywords"])
             if matches:
                 return spec
 
-    # 2. Obstetrics & Gynecology (for female patients)
+    # 2. Paediatrics age threshold (children under 14 with medical/fever/cough/respiratory complaints)
+    paed_rule = DEPARTMENT_RULES.get("Paediatrics") or DEPARTMENT_RULES.get("Pediatrics", {})
+    if age is not None and age <= paed_rule.get("max_age", 14):
+        return "Paediatrics"
+
+    # 3. Adult specialties: Cardiology, Pulmonology, General Surgery, Dermatology, Psychiatry
+    adult_specialties = [
+        "Cardiology", "Pulmonology/Chest & TB", "General Surgery",
+        "Dermatology", "Psychiatry"
+    ]
+    for spec in adult_specialties:
+        rule = DEPARTMENT_RULES.get(spec)
+        if rule and "keywords" in rule:
+            matches = detect_symptom_matches(complaint_str, rule["keywords"])
+            if matches:
+                return spec
+
+    # 4. Obstetrics & Gynaecology (for female patients)
     if gender and gender.lower() in ["female", "f"]:
-        obgyn_matches = detect_symptom_matches(complaint_str, DEPARTMENT_RULES["Obstetrics & Gynecology"]["keywords"])
-        if obgyn_matches:
-            return "Obstetrics & Gynecology"
-
-    # 3. Severe respiratory conditions (asthma, copd, stridor, wheezing)
-    resp_rule = DEPARTMENT_RULES.get("Respiratory / Pulmonology")
-    if resp_rule and "keywords" in resp_rule:
-        matches = detect_symptom_matches(complaint_str, resp_rule["keywords"])
-        if matches:
-            return "Respiratory / Pulmonology"
-
-    # 4. Pediatrics age threshold if no specific specialty injury or organ complaint
-    if age is not None and age <= DEPARTMENT_RULES["Pediatrics"]["max_age"]:
-        return "Pediatrics"
+        obgyn_rule = DEPARTMENT_RULES.get("Obstetrics & Gynaecology") or DEPARTMENT_RULES.get("Obstetrics & Gynecology", {})
+        if "keywords" in obgyn_rule:
+            obgyn_matches = detect_symptom_matches(complaint_str, obgyn_rule["keywords"])
+            if obgyn_matches:
+                return "Obstetrics & Gynaecology"
 
     return "General Medicine"
 
@@ -672,8 +681,8 @@ def run_triage(
 
         rule_dept = recommend_department(complaint, age, gender, final_tier)
         if final_tier == 1:
-            department = "Emergency / Resuscitation"
-        elif rule_dept in ["Cardiology", "Emergency / Resuscitation"]:
+            department = "Emergency/Casualty"
+        elif rule_dept in ["Cardiology", "Emergency/Casualty"]:
             department = rule_dept
         elif model_dept:
             department = model_dept
@@ -702,7 +711,7 @@ def run_triage(
     if model_tier is not None:
         final_tier = model_tier
         if final_tier == 1:
-            department = "Emergency / Resuscitation"
+            department = "Emergency/Casualty"
         elif model_dept:
             department = model_dept
         else:
@@ -760,6 +769,18 @@ def validate_nurse_override(
 
     if new_tier is not None and new_tier not in [1, 2, 3, 4, 5]:
         return False, "Override rejected: Invalid target tier specified."
+
+    if new_dept and new_dept != "Triage Review Desk":
+        canon_map = {d.lower(): d for d in DEPARTMENTS}
+        canon_map.update({
+            "pediatrics": "Paediatrics",
+            "orthopedics": "Orthopaedics",
+            "obstetrics & gynecology": "Obstetrics & Gynaecology",
+            "emergency / resuscitation": "Emergency/Casualty",
+            "respiratory / pulmonology": "Pulmonology/Chest & TB"
+        })
+        if new_dept.lower() not in canon_map:
+            return False, f"Override rejected: Unknown department '{new_dept}'. Must be one of the supported hospital departments."
 
     if is_escalated and current_tier in [1, 2] and new_tier is not None and new_tier > current_tier:
         if not confirm_escalation_downgrade:
