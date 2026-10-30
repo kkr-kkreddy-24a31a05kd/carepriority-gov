@@ -1,0 +1,46 @@
+# CarePriority Gov - Git Ignore Configuration
+
+# Virtual environment
+.venv/
+.venv311/
+venv/
+env/
+ENV/
+
+# Environment variables & secrets (NEVER COMMIT)
+.env
+.streamlit/secrets.toml
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# Data files (organizer intake data & generated CSVs)
+data/*.csv
+data/*.parquet
+data/*.json
+!data/cached_evaluation.json
+data/organizer/
+
+# Scratch and temporary evaluation folders
+scratch*/
+score.json
+
+# OS and Editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Trained model weights are reproducible build artifacts
+models/
+data/
+node_modules/
